@@ -32,13 +32,14 @@ printf 'portofolio.la-zone.io\n' > CNAME
 : > .nojekyll
 [ -f og.png ] || echo "⚠️  og.png manquant — aperçus sociaux vides. Ajoute une image 1200×630 nommée og.png."
 
-# --- 3. social meta (idempotent via marker) --------------------------------
-if grep -q "LZ-SOCIAL-META" index.html; then
+# --- 3. social meta (idempotent: skip if og:image already there) -----------
+if grep -q "og:image" index.html; then
   echo "→ meta social déjà présente, rien à injecter"
 else
   TITLE=$(sed -n 's:.*<title>\(.*\)</title>.*:\1:p' index.html | head -1)
   [ -z "$TITLE" ] && TITLE="La Zone — Nos réalisations"
-  META=$(cat <<EOF
+  META_TMP=$(mktemp)
+  cat > "$META_TMP" <<EOF
   <!-- LZ-SOCIAL-META:start (auto-injecté par deploy.sh — Claude Design efface ces tags) -->
   <meta name="description" content="$DESC">
   <meta property="og:type" content="website">
@@ -57,9 +58,13 @@ else
   <meta name="twitter:image" content="$SITE_URL/og.png">
   <!-- LZ-SOCIAL-META:end -->
 EOF
-)
-  awk -v meta="$META" 'BEGIN{ins=0} /<\/head>/ && !ins {print meta; ins=1} {print}' index.html > index.html.tmp
+  # Insert the meta file's contents just before the first </head> (portable awk).
+  awk -v mf="$META_TMP" '
+    /<\/head>/ && !ins { while ((getline line < mf) > 0) print line; close(mf); ins=1 }
+    { print }
+  ' index.html > index.html.tmp
   mv index.html.tmp index.html
+  rm -f "$META_TMP"
   echo "→ meta social injectée (og:title = \"$TITLE\")"
 fi
 
