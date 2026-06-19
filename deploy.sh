@@ -9,7 +9,7 @@
 # What it guarantees on every run (idempotent):
 #   1. index.html in place (optionally replaced by the given export)
 #   2. social <head> meta re-injected  ← Claude Design exports drop these every time
-#   3. CNAME / .nojekyll / og.png present
+#   3. CNAME / .nojekyll / og.jpg present
 #   4. commit + push to LAZONEDEV/portofolio main
 #
 set -euo pipefail
@@ -30,7 +30,7 @@ fi
 # --- 2. infra files --------------------------------------------------------
 printf 'portofolio.la-zone.io\n' > CNAME
 : > .nojekyll
-[ -f og.png ] || echo "⚠️  og.png manquant — aperçus sociaux vides. Ajoute une image 1200×630 nommée og.png."
+[ -f og.jpg ] || echo "⚠️  og.jpg manquant — aperçus sociaux vides. Ajoute une image 1200×630 nommée og.jpg."
 
 # --- 3. social meta (idempotent: skip if og:image already there) -----------
 if grep -q "og:image" index.html; then
@@ -48,14 +48,14 @@ else
   <meta property="og:url" content="$SITE_URL/">
   <meta property="og:title" content="$TITLE">
   <meta property="og:description" content="$DESC">
-  <meta property="og:image" content="$SITE_URL/og.png">
+  <meta property="og:image" content="$SITE_URL/og.jpg">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
   <meta property="og:image:alt" content="$TITLE">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="$TITLE">
   <meta name="twitter:description" content="$DESC">
-  <meta name="twitter:image" content="$SITE_URL/og.png">
+  <meta name="twitter:image" content="$SITE_URL/og.jpg">
   <!-- LZ-SOCIAL-META:end -->
 EOF
   # Insert the meta file's contents just before the first </head> (portable awk).
